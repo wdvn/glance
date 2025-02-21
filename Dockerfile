@@ -1,13 +1,19 @@
-FROM golang:1.22.5-alpine3.20 AS builder
+FROM golang:1.24.0-bullseye AS builder
 
 WORKDIR /app
-COPY . /app
-RUN CGO_ENABLED=0 go build .
 
-FROM alpine:3.20
+ADD . .
+
+RUN go mod tidy && go mod vendor
+
+RUN CGO_ENABLED=0 go build -o glance .
+
+FROM debian:12-slim
 
 WORKDIR /app
+
 COPY --from=builder /app/glance .
 
 EXPOSE 8080/tcp
-ENTRYPOINT ["/app/glance"]
+
+CMD ["/app/glance"]
